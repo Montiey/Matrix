@@ -1,97 +1,142 @@
-#include <ncurses.h>
-#include <math.h>
-#include <stdlib.h>
-#include <unistd.h>
+//// This version uses ANSI codes instead of ncurses. Moar portabel!
 
-#define FADE 12
-#define SPACING 2
-const float yRate = 400;//random rate at which to move to the next line (x/1000)
+
+//#include <math.h>
+//#include <stdlib.h>
+#include <unistd.h>
+#include <algorithm>
+#include <sys/ioctl.h>
+
+#define LENGTH 24
+
+#define MININC 200	//x1000
+#define MAXINC 800
+#define SPACING 3
 
 using namespace std;
 
-int ySize = 0;
-int xSize = 0;
+struct winsize size;
 
-int currentCol = 0;
+
+// Most stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
+
+#define COLORS 8
+const int colors[] = {234, 22, 28, 35, 40, 46, 157, 194};
+
+#define HEADCOLOR 15
+#define BGCOLOR 0
 
 char randChar(){
 	return rand() % 93 + 33;
 }
 
-////////
-
-void printOne(int col, int a[]){
-	
-	
-	if(rand()%1000 < yRate){
-		a[col]++;
-		attron(COLOR_PAIR(2));
-		mvwprintw(stdscr, a[col]-1, col, "%c", randChar());
-		attroff(COLOR_PAIR(2));
-	}
-	
-	if(a[col] >= FADE){
-		mvwprintw(stdscr, a[col] - FADE, col, "%c", ' ');
-	} else{
-		mvwprintw(stdscr, ySize - (FADE - a[col]), col, "%c", ' ');
-	}
-	
-	if(a[col] > ySize){
-		a[col] = 0;
-	}
-	
-	
-	
-	attron(COLOR_PAIR(1));
-	mvwprintw(stdscr, a[col], col, "%c", randChar());
-	attroff(COLOR_PAIR(1));
+void setF(int i){
+	printf("\x1B[38;5;%dm", i);
 }
 
-////////
+void setB(int i){
+	printf("\x1B[48;5;%dm", i);
+}
+
+void setPos(int y, int x){
+	printf("\x1B[%d;%df", y, x);
+}
+
+void setFadeShade(int i){
+	int c = colors[(int)max(0, min(COLORS, i))];
+	setF(c);
+}
+
+void clear(){
+	setB(BGCOLOR);
+	printf("\x1B[2J");
+}
+
+int wrap(int n){
+	if(n >= 0){
+		return n % size.ws_row;	//TODO: loop n over the screen size
+	} else{
+		return size.ws_row - ((-n) % size.ws_row);
+	}
+}
+
+int map(long x, long in_min, long in_max, long out_min, long out_max){
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+class Drop{
+	public:
+	int y;
+	int x;
+	float increment;
+	float sum;
+	
+	char * chars;
+	
+	Drop(){
+		x = 0;
+		increment = ((rand() % (MAXINC - MININC)) + MININC) / 1000.0;
+		y = rand() % size.ws_row;
+		sum = 0;
+		chars = (char *) calloc(size.ws_row, sizeof(char));
+		for(int i = 0; i < size.ws_row; i++){
+			chars[i] = randChar();
+		}
+	}
+	
+	void print(){
+		for(int i = 0; i < LENGTH; i++){
+			setFadeShade(map(i, 0, LENGTH-1, COLORS-1, 0));
+			setPos(wrap(y-i), x);
+			printf("%c", chars[wrap(y-i)]);
+		}
+		setPos(wrap(y-LENGTH), x);
+		printf(" ");
+		y = (y+1) % size.ws_row;
+	}
+	
+	void printHead(){
+		setF(HEADCOLOR);
+		setPos(y, x);
+		printf("%c", randChar());
+	}
+};
 
 int main(int argc, char* argv[]){
+	ioctl(STDOUT_FILENO,TIOCGWINSZ,&size);
+	Drop * arr = new Drop[size.ws_col];
 	
-	getch();
+	for(int i = 0; i < size.ws_col; i++){
+		arr[i].x = i;
+	}
 	
-	initscr();
-	noecho();
+	clear();
 	
-	start_color();
-	
-	getmaxyx(stdscr, ySize, xSize);
-	
-	int * arr = (int *) calloc(xSize, sizeof(int));
-	
-	if(!can_change_color()) return -1;
-	if(!has_colors()) return -1;
-	
-	init_color(COLOR_WHITE, 1000, 1000, 1000);
-	init_color(COLOR_GREEN, 1000, 1000, 0);
-	
-	init_pair(1, COLOR_WHITE, COLOR_BLACK);
-	init_pair(2, COLOR_GREEN, COLOR_BLACK);
-	
-	for(int i = 0; i < xSize; i++){
-		if(i%SPACING == 0){
-			arr[i] = rand()%ySize;
+	for(int i = 0; i < size.ws_col; i++){	//initial
+		if(i % SPACING == 0){
+			arr[i].sum += arr[i].increment;
+			arr[i].print();
 		}
 	}
 	
-	while(1){
-		for(int i = 0; i < xSize; i++){
-			if(i%SPACING == 0){
-				printOne(i, arr);
+	for(int x = 0; x < 1000; x++){
+		for(int i = 0; i < size.ws_col; i++){
+			if(i % SPACING == 0){
+				if(arr[i].sum >= 1){
+					arr[i].sum = 0;
+					arr[i].print();
+				}
+				arr[i].sum += arr[i].increment;
+				arr[i].printHead();
 			}
 		}
-		refresh();
-		usleep(1000 * 100);
+		fflush(stdout);
+		usleep(1000*100);
 	}
 	
-	getch();
-	endwin();
 	
-	
-	
-	
+	setF(10);
+	setB(0);
 	return 0;
 }
+
