@@ -7,9 +7,7 @@
 #include <algorithm>
 #include <sys/ioctl.h>
 
-#define LENGTH 24
-
-#define MININC 200	//x1000
+#define MININC 200	//1/1000
 #define MAXINC 800
 #define SPACING 3
 
@@ -20,8 +18,9 @@ struct winsize size;
 
 // Most stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
 
-#define COLORS 8
-const int colors[] = {234, 22, 28, 35, 40, 46, 157, 194};
+const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 35, 28, 28, 28, 22, 22, 22, 22, 234, 234, 234, 234};
+
+const int numColors = sizeof(colors) / sizeof(colors[0]);
 
 #define HEADCOLOR 15
 #define BGCOLOR 0
@@ -43,7 +42,7 @@ void setPos(int y, int x){
 }
 
 void setFadeShade(int i){
-	int c = colors[(int)max(0, min(COLORS, i))];
+	int c = colors[(int)max(0, min(numColors, i))];
 	setF(c);
 }
 
@@ -58,10 +57,6 @@ int wrap(int n){
 	} else{
 		return size.ws_row - ((-n) % size.ws_row);
 	}
-}
-
-int map(long x, long in_min, long in_max, long out_min, long out_max){
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 class Drop{
@@ -85,12 +80,12 @@ class Drop{
 	}
 	
 	void print(){
-		for(int i = 0; i < LENGTH; i++){
-			setFadeShade(map(i, 0, LENGTH-1, COLORS-1, 0));
+		for(int i = 0; i < numColors; i++){
+			setFadeShade(i);
 			setPos(wrap(y-i), x);
 			printf("%c", chars[wrap(y-i)]);
 		}
-		setPos(wrap(y-LENGTH), x);
+		setPos(wrap(y-numColors), x);
 		printf(" ");
 		y = (y+1) % size.ws_row;
 	}
@@ -119,7 +114,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	
-	for(int x = 0; x < 1000; x++){
+	for(;;){
 		for(int i = 0; i < size.ws_col; i++){
 			if(i % SPACING == 0){
 				if(arr[i].sum >= 1){
@@ -134,9 +129,6 @@ int main(int argc, char* argv[]){
 		usleep(1000*100);
 	}
 	
-	
-	setF(10);
-	setB(0);
 	return 0;
 }
 
