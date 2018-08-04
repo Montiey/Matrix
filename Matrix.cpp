@@ -1,13 +1,8 @@
-//// This version uses ANSI codes instead of ncurses. Moar portabel!
-
-
-//#include <math.h>
-//#include <stdlib.h>
 #include <unistd.h>
 #include <algorithm>
 #include <sys/ioctl.h>
 
-#define MININC 200	//1/1000
+#define MININC 200	// 1/1000
 #define MAXINC 800
 #define SPACING 3
 
@@ -15,8 +10,7 @@ using namespace std;
 
 struct winsize size;
 
-
-// Most stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
+// Most color stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
 
 const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 35, 28, 28, 28, 22, 22, 22, 22, 234, 234, 234, 234};
 
@@ -42,8 +36,7 @@ void setPos(int y, int x){
 }
 
 void setFadeShade(int i){
-	int c = colors[(int)max(0, min(numColors, i))];
-	setF(c);
+	setF(colors[(int)max(0, min(numColors, i))]);
 }
 
 void clear(){
@@ -53,8 +46,8 @@ void clear(){
 
 int wrap(int n){
 	if(n >= 0){
-		return n % size.ws_row;	//TODO: loop n over the screen size
-	} else{
+		return n % size.ws_row;
+	}else{
 		return size.ws_row - ((-n) % size.ws_row);
 	}
 }
