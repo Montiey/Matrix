@@ -4,15 +4,6 @@
 #include <iostream>
 #include <stdio.h>
 
-
-
-#ifdef _WIN32
-#include <winioctl.h>
-#endif
-#ifdef __APPLE__
-#include <sys/ioctl.h>
-#endif
-
 #define MININC 50	// 1/1000
 #define MAXINC 1000
 
@@ -39,7 +30,44 @@ float * increments;
 float * sums;
 int * ys;
 
-struct winsize size;
+int rows;
+int cols;
+
+////////////////
+
+#ifdef __APPLE__
+#include <sys/ioctl.h>
+#define OS "MACOS"
+void getSize(){
+    struct winsize size;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+    rows = size.ws_row;
+    cols = size.ws_col;
+}
+
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#define OS "WIN32"
+void getSize(){
+    HWND console = GetConsoleWindow();
+    RECT r;
+    GetWindowRect(console, &r);
+    rows = r.bottom;
+    cols = r.right;
+}
+#endif
+
+////////////////
+
+void wait(long millis){
+    #if defined(_WIN32) || defined(_WIN64)
+    Sleep(millis);
+    #elif defined(__APPLE__)
+    usleep(1000 * millis);
+    #endif
+}
 
 char randChar(){
 	return rand() % 93 + 33;
@@ -68,9 +96,9 @@ void clear(){
 
 int wrap(int n){
 	if(n >= 0){
-		return n % size.ws_row;
+		return n % rows;
 	}else{
-		return size.ws_row - ((-n) % size.ws_row);
+		return rows - ((-n) % rows);
 	}
 }
 
@@ -84,43 +112,49 @@ void print(int &y, int &x){
 	for(int i = 0; i < numColors; i++){
 		setFadeShade(i);
 		setPos(wrap(y-i), x);
-		printf("%c", chars[wrap(y-i) + x * size.ws_row]);
+		printf("%c", chars[wrap(y-i) + x * rows]);
 	}
 	setPos(wrap(y-numColors), x);
 	printf(" ");
-	y = (y+1) % size.ws_row;
+	y = (y+1) % rows;
 	
 	#ifndef HEADSPIN
 	setF(HEADCOLOR);
 	setPos(y, x);
-	printf("%c", chars[y + x*size.ws_row]);
+	printf("%c", chars[y + x*rows]);
 	#endif
 }
 
 int main(int argc, char* argv[]){
-	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
-	
+    cout << "OS: " << OS;
+    fflush(stdout);
+    wait(3000);
+    
+    getSize();
+    
+    cout << rows << "R x " << cols << "C";
+    
 	clear();
 	
-	chars = (char *) calloc(size.ws_row * size.ws_col, sizeof(char));
-	increments = (float *) calloc(size.ws_col, sizeof(float));
-	sums = (float *) calloc(size.ws_col, sizeof(float));
-	ys = (int *) calloc(size.ws_col, sizeof(int));
+	chars = (char *) calloc(rows * cols, sizeof(char));
+	increments = (float *) calloc(cols, sizeof(float));
+	sums = (float *) calloc(cols, sizeof(float));
+	ys = (int *) calloc(cols, sizeof(int));
 	
-	for(int i = 0; i < size.ws_row * size.ws_col; i++){
+	for(int i = 0; i < rows * cols; i++){
 		chars[i] = randChar();
 	}
 	
-	for(int i = 0; i < size.ws_col; i++){
+	for(int i = 0; i < cols; i++){
 		increments[i] = ((rand() % (MAXINC - MININC)) + MININC) / 1000.0;
 		sums[i] = 0.0;
-		ys[i] = rand() % size.ws_row;
+		ys[i] = rand() % rows;
 	}
 	
 	clear();
 	
 	for(;;){
-		for(int i = 0; i < size.ws_col; i++){
+		for(int i = 0; i < cols; i++){
 			if(i % SPACING == 0){
 				sums[i] += increments[i];
 				if(sums[i] >= 1){
@@ -133,7 +167,7 @@ int main(int argc, char* argv[]){
 			}
 		}
 		fflush(stdout);
-		usleep(1000*CYCLETIME);
+		wait(CYCLETIME);
 	}
 	
 	return 0;
