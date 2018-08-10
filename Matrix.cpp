@@ -1,23 +1,45 @@
 #include <unistd.h>
+#include <string>
 #include <algorithm>
-#include <sys/ioctl.h>
+#include <iostream>
+#include <stdio.h>
 
-#define MININC 200	// 1/1000
-#define MAXINC 800
-#define SPACING 3
+
+
+#ifdef _WIN32
+#include <winioctl.h>
+#endif
+#ifdef __APPLE__
+#include <sys/ioctl.h>
+#endif
+
+#define MININC 50	// 1/1000
+#define MAXINC 1000
+
+#define CYCLETIME 50 // milliseconds - increase to save CPU
+
+#define SPACING 3	//increase to save CPU
+
+//comment out to save CPU
+//#define HEADSPIN	//Spins the head char every loop, even if not moving down that iteration.
 
 using namespace std;
 
-struct winsize size;
-
 // Most color stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
 
-const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 35, 28, 28, 28, 22, 22, 22, 22, 234, 234, 234, 234};
+const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 35, 28, 28, 28, 22, 22, 22, 22, 234, 234, 234, 234};	//not including head color
 
 const int numColors = sizeof(colors) / sizeof(colors[0]);
 
 #define HEADCOLOR 15
 #define BGCOLOR 0
+
+char * chars;
+float * increments;
+float * sums;
+int * ys;
+
+struct winsize size;
 
 char randChar(){
 	return rand() % 93 + 33;
@@ -35,7 +57,7 @@ void setPos(int y, int x){
 	printf("\x1B[%d;%df", y, x);
 }
 
-void setFadeShade(int i){
+void setFadeShade(int &i){
 	setF(colors[(int)max(0, min(numColors, i))]);
 }
 
@@ -52,74 +74,66 @@ int wrap(int n){
 	}
 }
 
-class Drop{
-	public:
-	int y;
-	int x;
-	float increment;
-	float sum;
-	
-	char * chars;
-	
-	Drop(){
-		x = 0;
-		increment = ((rand() % (MAXINC - MININC)) + MININC) / 1000.0;
-		y = rand() % size.ws_row;
-		sum = 0;
-		chars = (char *) calloc(size.ws_row, sizeof(char));
-		for(int i = 0; i < size.ws_row; i++){
-			chars[i] = randChar();
-		}
+void printHead(int &y, int &x){
+	setF(HEADCOLOR);
+	setPos(y, x);
+	printf("%c", randChar());
+}
+
+void print(int &y, int &x){
+	for(int i = 0; i < numColors; i++){
+		setFadeShade(i);
+		setPos(wrap(y-i), x);
+		printf("%c", chars[wrap(y-i) + x * size.ws_row]);
 	}
+	setPos(wrap(y-numColors), x);
+	printf(" ");
+	y = (y+1) % size.ws_row;
 	
-	void print(){
-		for(int i = 0; i < numColors; i++){
-			setFadeShade(i);
-			setPos(wrap(y-i), x);
-			printf("%c", chars[wrap(y-i)]);
-		}
-		setPos(wrap(y-numColors), x);
-		printf(" ");
-		y = (y+1) % size.ws_row;
-	}
-	
-	void printHead(){
-		setF(HEADCOLOR);
-		setPos(y, x);
-		printf("%c", randChar());
-	}
-};
+	#ifndef HEADSPIN
+	setF(HEADCOLOR);
+	setPos(y, x);
+	printf("%c", chars[y + x*size.ws_row]);
+	#endif
+}
 
 int main(int argc, char* argv[]){
-	ioctl(STDOUT_FILENO,TIOCGWINSZ,&size);
-	Drop * arr = new Drop[size.ws_col];
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
+	
+	clear();
+	
+	chars = (char *) calloc(size.ws_row * size.ws_col, sizeof(char));
+	increments = (float *) calloc(size.ws_col, sizeof(float));
+	sums = (float *) calloc(size.ws_col, sizeof(float));
+	ys = (int *) calloc(size.ws_col, sizeof(int));
+	
+	for(int i = 0; i < size.ws_row * size.ws_col; i++){
+		chars[i] = randChar();
+	}
 	
 	for(int i = 0; i < size.ws_col; i++){
-		arr[i].x = i;
+		increments[i] = ((rand() % (MAXINC - MININC)) + MININC) / 1000.0;
+		sums[i] = 0.0;
+		ys[i] = rand() % size.ws_row;
 	}
 	
 	clear();
 	
-	for(int i = 0; i < size.ws_col; i++){	//initial
-		if(i % SPACING == 0){
-			arr[i].sum += arr[i].increment;
-			arr[i].print();
-		}
-	}
-	
 	for(;;){
 		for(int i = 0; i < size.ws_col; i++){
 			if(i % SPACING == 0){
-				if(arr[i].sum >= 1){
-					arr[i].sum = 0;
-					arr[i].print();
+				sums[i] += increments[i];
+				if(sums[i] >= 1){
+					sums[i] = 0;
+					print(ys[i], i);
 				}
-				arr[i].sum += arr[i].increment;
-				arr[i].printHead();
+				#ifdef HEADSPIN
+				printHead(ys[i], i);
+				#endif
 			}
 		}
 		fflush(stdout);
-		usleep(1000*100);
+		usleep(1000*CYCLETIME);
 	}
 	
 	return 0;
