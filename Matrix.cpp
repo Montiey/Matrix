@@ -6,13 +6,10 @@
 
 #define MININC 50	// 1/1000
 #define MAXINC 1000
-
-
-#define SPACING 3	//increase to save CPU
-
+#define SPACING 3	//increase to save CP
 //comment out to save CPU
 #define HEADSPIN	//Spins the head char every loop, even if not moving down that iteration.
-
+#define RESIZE_CHECK_INTERVAL 20
 using namespace std;
 
 // Most color stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
@@ -21,9 +18,9 @@ char * chars;
 float * increments;
 float * sums;
 int * ys;
-
 int rows;
 int cols;
+int loopr = 0;
 
 ////////////////
 
@@ -187,8 +184,6 @@ int main(int argc, char* argv[]){
 	
 	clear();
 	
-	unsigned char loopr = 0;
-	
 	for(;;){
 		for(int i = 0; i < cols; i++){
 			if(i % SPACING == 0){
@@ -205,15 +200,18 @@ int main(int argc, char* argv[]){
 		fflush(stdout);
 		wait(100);
 		
-		if(!loopr){
+		if(loopr >= RESIZE_CHECK_INTERVAL){
 			if(getSize()){
-				clear();
 				resize();
+				clear();
 			}
-		} else{
-			loopr++;
+			loopr = 0;
 		}
+		loopr++;
+		
 	}
+	
+	cout << (int)loopr;
 	
 	return 0;
 }
