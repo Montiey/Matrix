@@ -7,7 +7,6 @@
 #define MININC 50	// 1/1000
 #define MAXINC 1000
 
-#define CYCLETIME 50 // milliseconds - increase to save CPU
 
 #define SPACING 3	//increase to save CPU
 
@@ -31,16 +30,20 @@ int cols;
 #ifdef __APPLE__
 #include <sys/ioctl.h>
 #define OS "MACOS"
-const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 35, 28, 28, 28, 22, 22, 22, 22, 234, 234, 234, 234};
+const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 28, 28, 22, 22, 234, 234};
 const int numColors = sizeof(colors) / sizeof(colors[0]);
 #define HEADCOLOR 15
 #define BGCOLOR 0
+struct winsize size;
 
-void getSize(){
-    struct winsize size;
+bool getSize(){
+	int oldr = rows;
+	int oldc = cols;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
     rows = size.ws_row;
     cols = size.ws_col;
+	
+	return (oldr != rows || oldc != cols);
 }
 
 void setF(int i){
@@ -70,13 +73,16 @@ const int colors[] = {10, 10, 10, 10, 10, 10, 2, 2, 2, 2, 2, 8, 8, 8, 8, 8};
 const int numColors = sizeof(colors) / sizeof(colors[0]);
 #define HEADCOLOR 15
 #define BGCOLOR 0
+HWND console = GetConsoleWindow();
+RECT r;
 
-void getSize(){
-    HWND console = GetConsoleWindow();
-    RECT r;
+bool getSize(){
     GetWindowRect(console, &r);
+	RECT old = r;
     rows = (r.bottom - r.top) / 16 - 3;	//approximate the max number of characters given the size of the window
     cols = (r.right - r.left) / 8 - 5;
+	
+	return (old.bottom != r.bottom || old.top != r.top || old.right != r.right || old.left != r.left);
 }
 
 void setF(int i){
@@ -146,17 +152,11 @@ void print(int &y, int &x){
 	#endif
 }
 
-////////////////
-
-int main(int argc, char* argv[]){
-	getSize();
-	
-    /*cout << "OS: " << OS;
-    cout << rows << "R x " << cols << "C";
-    fflush(stdout);
-    wait(3000);*/
-    
-	clear();
+void resize(){
+	delete chars;
+	delete increments;
+	delete sums;
+	delete ys;
 	
 	chars = (char *) calloc(rows * cols, sizeof(char));
 	increments = (float *) calloc(cols, sizeof(float));
@@ -172,8 +172,22 @@ int main(int argc, char* argv[]){
 		sums[i] = 0.0;
 		ys[i] = rand() % rows;
 	}
+}
+
+////////////////
+
+int main(int argc, char* argv[]){
+	getSize();
+	resize();
+	
+    /*cout << "OS: " << OS;
+    cout << rows << "R x " << cols << "C";
+    fflush(stdout);
+    wait(3000);*/
 	
 	clear();
+	
+	unsigned char loopr = 0;
 	
 	for(;;){
 		for(int i = 0; i < cols; i++){
@@ -187,6 +201,17 @@ int main(int argc, char* argv[]){
 				printHead(ys[i], i);
 				#endif
 			}
+		}
+		fflush(stdout);
+		wait(100);
+		
+		if(!loopr){
+			if(getSize()){
+				clear();
+				resize();
+			}
+		} else{
+			loopr++;
 		}
 	}
 	
