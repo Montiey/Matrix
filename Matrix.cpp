@@ -12,18 +12,11 @@
 #define SPACING 3	//increase to save CPU
 
 //comment out to save CPU
-//#define HEADSPIN	//Spins the head char every loop, even if not moving down that iteration.
+#define HEADSPIN	//Spins the head char every loop, even if not moving down that iteration.
 
 using namespace std;
 
 // Most color stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
-
-const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 35, 28, 28, 28, 22, 22, 22, 22, 234, 234, 234, 234};	//not including head color
-
-const int numColors = sizeof(colors) / sizeof(colors[0]);
-
-#define HEADCOLOR 15
-#define BGCOLOR 0
 
 char * chars;
 float * increments;
@@ -38,6 +31,11 @@ int cols;
 #ifdef __APPLE__
 #include <sys/ioctl.h>
 #define OS "MACOS"
+const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 35, 28, 28, 28, 22, 22, 22, 22, 234, 234, 234, 234};
+const int numColors = sizeof(colors) / sizeof(colors[0]);
+#define HEADCOLOR 15
+#define BGCOLOR 0
+
 void getSize(){
     struct winsize size;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
@@ -45,17 +43,57 @@ void getSize(){
     cols = size.ws_col;
 }
 
+void setF(int i){
+	printf("\x1B[38;5;%dm", i);
+}
+
+void setB(int i){
+	printf("\x1B[48;5;%dm", i);
+}
+
+void setPos(int y, int x){
+	printf("\x1B[%d;%df", y, x);
+}
+
+void clear(){
+	setB(BGCOLOR);
+	printf("\x1B[2J");
+}
 #endif
+
+////////////////
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #define OS "WIN32"
+const int colors[] = {10, 10, 10, 10, 10, 10, 2, 2, 2, 2, 2, 8, 8, 8, 8, 8};
+const int numColors = sizeof(colors) / sizeof(colors[0]);
+#define HEADCOLOR 15
+#define BGCOLOR 0
+
 void getSize(){
     HWND console = GetConsoleWindow();
     RECT r;
     GetWindowRect(console, &r);
-    rows = r.bottom;
-    cols = r.right;
+    rows = (r.bottom - r.top) / 16 - 3;	//approximate the max number of characters given the size of the window
+    cols = (r.right - r.left) / 8 - 5;
+}
+
+void setF(int i){
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), i);
+}
+void setB(int i){
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), i);
+}
+
+void setPos(int y, int x){
+	COORD pos = {(short)x, (short)y};
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
+
+void clear(){
+	setB(BGCOLOR);
+	system("CLS");
 }
 #endif
 
@@ -73,25 +111,8 @@ char randChar(){
 	return rand() % 93 + 33;
 }
 
-void setF(int i){
-	printf("\x1B[38;5;%dm", i);
-}
-
-void setB(int i){
-	printf("\x1B[48;5;%dm", i);
-}
-
-void setPos(int y, int x){
-	printf("\x1B[%d;%df", y, x);
-}
-
 void setFadeShade(int &i){
 	setF(colors[(int)max(0, min(numColors, i))]);
-}
-
-void clear(){
-	setB(BGCOLOR);
-	printf("\x1B[2J");
 }
 
 int wrap(int n){
@@ -125,14 +146,15 @@ void print(int &y, int &x){
 	#endif
 }
 
+////////////////
+
 int main(int argc, char* argv[]){
-    cout << "OS: " << OS;
-    fflush(stdout);
-    wait(3000);
-    
-    getSize();
-    
+	getSize();
+	
+    /*cout << "OS: " << OS;
     cout << rows << "R x " << cols << "C";
+    fflush(stdout);
+    wait(3000);*/
     
 	clear();
 	
@@ -166,8 +188,6 @@ int main(int argc, char* argv[]){
 				#endif
 			}
 		}
-		fflush(stdout);
-		wait(CYCLETIME);
 	}
 	
 	return 0;
