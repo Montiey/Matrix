@@ -3,9 +3,8 @@
 #include <algorithm>
 #include <iostream>
 #include <stdio.h>
-#include <stdlib.h>
 
-#define MININC 50	// 1/1000
+#define MININC 100	// 1/1000
 #define MAXINC 1000
 #define SPACING 4	//increase to save CP
 //comment out to save CPU
@@ -14,6 +13,9 @@
 using namespace std;
 
 // Most color stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
+
+//const char charTable[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '~', '!', '@', '#', '$', '%', '^', '&', '*', '-', '+', '=', '\\', '/', '<', '>', '?', '[', ']', '{', '}', '(', ')', (char)(178)};
+char charTable[221];
 
 char * chars;
 float * increments;
@@ -112,7 +114,7 @@ void wait_custom(long millis){
 }
 
 char randChar(){
-	return rand() % 93 + 33;
+	return charTable[rand() % sizeof(charTable)];
 }
 
 void setFadeShade(int &i){
@@ -151,16 +153,16 @@ void print(int &y, int &x){
 }
 
 void resize(){
-//    free(chars);
-//    free(increments);
-//    free(sums);
-//    free(ys);
+    free(chars);
+    free(increments);
+    free(sums);
+    free(ys);
     
 	chars = (char *) calloc(rows * cols, sizeof(char));
 	increments = (float *) calloc(cols, sizeof(float));
 	sums = (float *) calloc(cols, sizeof(float));
 	ys = (int *) calloc(cols, sizeof(int));
-	
+    
 	for(int i = 0; i < rows * cols; i++){
 		chars[i] = randChar();
 	}
@@ -175,6 +177,14 @@ void resize(){
 ////////////////
 
 int main(int argc, char* argv[]){
+    for(int i = 0; i < 94; i++){
+        charTable[i] = i + 33;
+    }
+    
+    for(int i = 0; i < 127; i++){
+        charTable[i + (94)] = i + 128;
+    }
+    
 	getSize();
 	resize();
 	
@@ -199,7 +209,6 @@ int main(int argc, char* argv[]){
 			}
 		}
 		fflush(stdout);
-		wait_custom(0);
 		
 		if(loopr >= RESIZE_CHECK_INTERVAL){
 			if(getSize()){
