@@ -26,7 +26,7 @@ int loopr = 0;
 
 ////////////////
 
-#ifdef __APPLE__
+#if defined(unix) || defined(__unix__) || defined (__unix) || defined (__APPLE__)
 #include <sys/ioctl.h>
 #define OS "MACOS"
 const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 28, 28, 22, 22, 234, 234};
