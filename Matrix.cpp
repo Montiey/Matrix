@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <iostream>
 #include <stdio.h>
-#include <stdlib.h>
 
 #define MININC 50	// 1/1000
 #define MAXINC 1000
