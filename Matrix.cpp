@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MININC 50	// 1/1000
 #define MAXINC 1000
@@ -101,7 +102,7 @@ void clear(){
 
 ////////////////
 
-void wait(long millis){
+void wait_custom(long millis){
     #if defined(_WIN32) || defined(_WIN64)
     Sleep(millis);
     #elif defined(__APPLE__)
@@ -197,7 +198,7 @@ int main(int argc, char* argv[]){
 			}
 		}
 		fflush(stdout);
-		wait(0);
+		wait_custom(0);
 		
 		if(loopr >= RESIZE_CHECK_INTERVAL){
 			if(getSize()){
