@@ -14,8 +14,7 @@ using namespace std;
 
 // Most color stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/
 
-//const char charTable[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '~', '!', '@', '#', '$', '%', '^', '&', '*', '-', '+', '=', '\\', '/', '<', '>', '?', '[', ']', '{', '}', '(', ')', (char)(178)};
-char charTable[221];
+const char charTable[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '~', '!', '@', '#', '$', '%', '^', '&', '*', '-', '+', '=', '\\', '/', '<', '>', '?', '[', ']', '{', '}', '(', ')'};
 
 char * chars;
 float * increments;
@@ -177,14 +176,7 @@ void resize(){
 ////////////////
 
 int main(int argc, char* argv[]){
-    for(int i = 0; i < 94; i++){
-        charTable[i] = i + 33;
-    }
-    
-    for(int i = 0; i < 127; i++){
-        charTable[i + (94)] = i + 128;
-    }
-    
+
 	getSize();
 	resize();
 	
