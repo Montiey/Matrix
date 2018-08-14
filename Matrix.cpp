@@ -60,6 +60,10 @@ void clear(){
 	setB(BGCOLOR);
 	printf("\x1B[2J");
 }
+
+void waitCustom(long millis){
+    usleep(1000 * millis);
+}
 #endif
 
 ////////////////
@@ -98,19 +102,15 @@ void clear(){
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BGCOLOR);
 	system("CLS");
 }
+
+void waitCustom(long millis){
+    Sleep(millis);
+}
 #endif
 
 const int numColors = sizeof(colors) / sizeof(colors[0]);
 
 ////////////////
-
-void waitCustom(long millis){
-    #if defined(_WIN32) || defined(_WIN64)
-    Sleep(millis);
-    #elif defined(__APPLE__)
-    usleep(1000 * millis);
-    #endif
-}
 
 char randChar(){
 	return charTable[rand() % sizeof(charTable)];
