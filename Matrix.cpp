@@ -29,7 +29,6 @@ int loopr = 0;
 #include <sys/ioctl.h>
 #define OS "MACOS"
 const int colors[] = {194, 194, 157, 157, 46, 46, 40, 40, 35, 35, 28, 28, 22, 22, 234, 234};
-const int numColors = sizeof(colors) / sizeof(colors[0]);
 #define HEADCOLOR 15
 #define BGCOLOR 0
 struct winsize size;
@@ -68,7 +67,6 @@ void clear(){
 #include <windows.h>
 #define OS "WIN32"
 const int colors[] = {10, 10, 10, 10, 10, 10, 2, 2, 2, 2, 2, 8, 8, 8, 8, 8};
-const int numColors = sizeof(colors) / sizeof(colors[0]);
 #define HEADCOLOR 15
 #define BGCOLOR 0
 HWND console = GetConsoleWindow();
@@ -96,9 +94,12 @@ void setPos(int y, int x){
 }
 
 void clear(){
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BGCOLOR);
 	system("CLS");
 }
 #endif
+
+const int numColors = sizeof(colors) / sizeof(colors[0]);
 
 ////////////////
 
