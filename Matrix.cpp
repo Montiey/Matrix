@@ -104,7 +104,7 @@ const int numColors = sizeof(colors) / sizeof(colors[0]);
 
 ////////////////
 
-void wait_custom(long millis){
+void waitCustom(long millis){
     #if defined(_WIN32) || defined(_WIN64)
     Sleep(millis);
     #elif defined(__APPLE__)
@@ -210,6 +210,8 @@ int main(int argc, char* argv[]){
 			loopr = 0;
 		}
 		loopr++;
+		
+		waitCustom(40);
 		
 	}
 	
