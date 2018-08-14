@@ -3,10 +3,11 @@
 #include <algorithm>
 #include <iostream>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MININC 50	// 1/1000
 #define MAXINC 1000
-#define SPACING 3	//increase to save CP
+#define SPACING 4	//increase to save CP
 //comment out to save CPU
 #define HEADSPIN	//Spins the head char every loop, even if not moving down that iteration.
 #define RESIZE_CHECK_INTERVAL 20
@@ -74,8 +75,8 @@ HWND console = GetConsoleWindow();
 RECT r;
 
 bool getSize(){
+    RECT old = r;
     GetWindowRect(console, &r);
-	RECT old = r;
     rows = (r.bottom - r.top) / 16 - 3;	//approximate the max number of characters given the size of the window
     cols = (r.right - r.left) / 8 - 5;
 	
@@ -95,7 +96,6 @@ void setPos(int y, int x){
 }
 
 void clear(){
-	setB(BGCOLOR);
 	system("CLS");
 }
 #endif
@@ -150,11 +150,11 @@ void print(int &y, int &x){
 }
 
 void resize(){
-	delete chars;
-	delete increments;
-	delete sums;
-	delete ys;
-	
+//    free(chars);
+//    free(increments);
+//    free(sums);
+//    free(ys);
+    
 	chars = (char *) calloc(rows * cols, sizeof(char));
 	increments = (float *) calloc(cols, sizeof(float));
 	sums = (float *) calloc(cols, sizeof(float));
@@ -198,7 +198,7 @@ int main(int argc, char* argv[]){
 			}
 		}
 		fflush(stdout);
-		wait(100);
+		wait(0);
 		
 		if(loopr >= RESIZE_CHECK_INTERVAL){
 			if(getSize()){
