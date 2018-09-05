@@ -3,16 +3,21 @@
 }
 
 body{
-	position: relative;
-	height: 100%;
+	background-color: #fff;
 }
 
 #apoc{
-	color: white;
 	background-color: #000;
 	width: 100%;
 	height: 100%;
 	position: absolute;
-	top: 100px;
-	left: 100px;
+/*	top: 0px;*/
+/*	left: 0px;*/
+	overflow: hidden;
+}
+
+.char{
+	color: #fff;
+	background-color: #0f0;
+	position: absolute;
 }
