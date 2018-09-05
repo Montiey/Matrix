@@ -9,6 +9,8 @@ var cols = Math.floor(($("#apoc").width() - charWidth) / (charWidth + charSpacin
 
 var length = 16;
 
+var charString = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789~[]\\{}|<>?/"
+
 addElements();
 
 setInterval(updateElements, 30);
@@ -52,5 +54,5 @@ function updateElements(){	//Run through chars, increment stuff, wrap stuff, etc
 }
 
 function randChar(){
-	return Math.floor(Math.random() * 10);
+	return charString.charAt(Math.random() * charString.length);
 }
