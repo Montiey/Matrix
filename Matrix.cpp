@@ -8,8 +8,8 @@
 #define MAXINC 1000
 #define SPACING 4	//increase to save CP
 //comment out to save CPU
-#define HEADSPIN	//Spins the head char every loop, even if not moving down that iteration.
-#define RESIZE_CHECK_INTERVAL 20
+//#define HEADSPIN	//Spins the head char every loop, even if not moving down that iteration.
+#define RESIZE_CHECK_INTERVAL 1000
 using namespace std;
 
 // Most color stuff came from https://www.en.wikipedia.org/wiki/ANSI_escape_code/

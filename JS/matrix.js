@@ -17,39 +17,44 @@ setInterval(updateElements, 30);
 
 function addElements(){	//Add DOM elements once
 	for(var i = 0; i < cols; i++){
-		console.log("new element");
+//		console.log("new element");
 		var container = document.createElement("div");
 		container.classList.add("char");
-		container.innerHTML = randChar();
-
-		container.style.height = charHeight + "px";
-		container.style.width = charWidth + "px";
 		container.style.lineHeight = charHeight + "px";
 		container.style.fontSize = charHeight + "px";
 		container.style.textAlign = "center";
-
-		container.setAttribute("data-y", Math.random() * $("#apoc").height() + "px");
-		container.style.top = container.getAttribute("data-y");	//set both immediatly so the positions don't jump when loading
 		
+		container.style.top = container.getAttribute("data-y");	//set both immediatly so the positions don't jump when loading
 		container.style.left = i * charWidth + i * charSpacing + "px";
 		
 		container.setAttribute("data-speed", Math.random() * (speedMax - speedMin) + speedMin);
-
+		
+		container.style.height = charHeight + "px";
+		container.style.width = charWidth + "px";
+		
+		container.setAttribute("data-y", 0);
+		
+		container.style.backgroundColor = "rgb(255, 255, 255)";	//color incrementation needs this initialization
+		
 		document.getElementById("apoc").appendChild(container);
 	}
 }
 
 function updateElements(){	//Run through chars, increment stuff, wrap stuff, etc.
 	$.each(document.getElementsByClassName("char"), function(index, value){
-		var tempHeight = parseFloat(value.getAttribute("data-y") || 0);
+		var tempHeight = parseFloat(value.getAttribute("data-y"));
 		tempHeight += parseFloat(value.getAttribute("data-speed"));
 		if(tempHeight >= $("#apoc").height()){
-			tempHeight = -charHeight;
+			
+			var str = value.style.backgroundColor;
+			var r parseInt()
+			var g
+			var b
+			
+			tempHeight -= parseFloat(value.style.height) + parseFloat($("#apoc").height());	//maintain minute offsets to acheive entropy
 		}
 		value.setAttribute("data-y", tempHeight);
 		value.style.top = tempHeight + "px";
-		
-//		console.log("float: " + tempHeight + " int: " + value.style.top);
 	});
 }
 
